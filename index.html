@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SBOCYM Bible Study Quiz Leaderboard</title>
+  
+  <!-- Browser Tab Logo (Favicon) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="Logo Final.png">
+  <link rel="shortcut icon" type="image/png" href="Logo Final.png">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --gold: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.35);
+      --silver: #cbd5e1;
+      --silver-glow: rgba(203, 213, 225, 0.25);
+      --bronze: #d97706;
+      --bronze-glow: rgba(217, 119, 6, 0.25);
+      --accent: #6366f1;
+    }
+
+    /* Native system font stack used by Apple, Google, and modern OSs */
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 750px; margin: 0 auto; }
+
+    /* Header & Logo */
+    .header { text-align: center; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; }
+    .title-wrapper { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 0.4rem; }
+    
+    .church-logo { 
+      width: 58px; 
+      height: 58px; 
+      border-radius: 50%; 
+      object-fit: cover; 
+      border: none; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .header h1 { 
+      font-size: 1.8rem; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #c7d2fe, #6366f1); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    .header p { color: var(--text-sub); font-size: 0.95rem; }
+
+    .tabs { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.8rem; background: #162032; padding: 6px; border-radius: 14px; width: fit-content; margin: 0 auto 1.8rem auto; border: 1px solid var(--card-border); }
+    .tab-btn { padding: 10px 24px; border: none; background: transparent; color: var(--text-sub); font-weight: 600; font-size: 0.9rem; border-radius: 10px; cursor: pointer; transition: all 0.25s ease; }
+    .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
+
+    .controls { margin-bottom: 2rem; }
+    .search-input { width: 100%; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* Podium */
+    .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 14px; margin-bottom: 2.5rem; min-height: 250px; }
+    .podium-card { flex: 1; max-width: 220px; background: var(--card-bg); border-radius: 16px; padding: 1.2rem 0.8rem; text-align: center; border: 1px solid var(--card-border); position: relative; transition: transform 0.3s ease; display: flex; flex-direction: column; align-items: center; }
+    .podium-card:hover { transform: translateY(-5px); }
+
+    .podium-card.gold { order: 2; height: 250px; border-color: var(--gold); box-shadow: 0 8px 25px var(--gold-glow); background: linear-gradient(180deg, #2a2015 0%, var(--card-bg) 100%); }
+    .podium-card.silver { order: 1; height: 220px; border-color: var(--silver); box-shadow: 0 8px 25px var(--silver-glow); }
+    .podium-card.bronze { order: 3; height: 200px; border-color: var(--bronze); box-shadow: 0 8px 25px var(--bronze-glow); }
+
+    .badge { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.3rem; margin-bottom: 0.8rem; }
+    .gold .badge { background: var(--gold); color: #000; }
+    .silver .badge { background: var(--silver); color: #000; }
+    .bronze .badge { background: var(--bronze); color: #fff; }
+
+    .podium-name { font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .podium-score { font-weight: 700; font-size: 1.35rem; color: #a5b4fc; letter-spacing: -0.01em; }
+    .podium-label { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Ranks 4+ */
+    .list-container { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); overflow: hidden; }
+    .list-header { display: flex; padding: 14px 20px; background: #162032; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-sub); font-weight: 700; border-bottom: 1px solid var(--card-border); }
+    .row { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--card-border); transition: background 0.2s; }
+    .row:last-child { border-bottom: none; }
+    .row:hover { background: #25334d; }
+
+    .col-rank { width: 65px; font-weight: 600; color: var(--text-sub); font-size: 0.95rem; }
+    .col-name { flex: 1; font-weight: 600; color: var(--text-main); font-size: 0.95rem; }
+    .col-score { font-weight: 700; color: #a5b4fc; font-size: 1.05rem; text-align: right; }
+
+    .state-message { text-align: center; padding: 3rem; color: var(--text-sub); font-weight: 500; font-size: 0.95rem; }
+
+    /* Mobile Tweaks */
+    @media (max-width: 600px) {
+      .church-logo { width: 46px; height: 46px; }
+      .header h1 { font-size: 1.35rem; }
+      .podium-container { gap: 6px; }
+      .podium-card.gold { height: 210px; }
+      .podium-card.silver { height: 185px; }
+      .podium-card.bronze { height: 170px; }
+      .podium-name { font-size: 0.82rem; }
+      .podium-score { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="title-wrapper">
+      <img src="Logo Final.png" alt="SBOCYM Logo" class="church-logo" id="logoImg">
+      <h1>SBOCYM Bible Study Quiz Leaderboard</h1>
+    </div>
+    <p id="subheading">Connecting to Google Sheets...</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-alltime" onclick="switchTab('alltime')">All Time</button>
+    <button class="tab-btn" id="tab-monthly" onclick="switchTab('monthly')">This Month</button>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search participant..." oninput="render()">
+  </div>
+
+  <div id="dashboardContent">
+    <div class="state-message">Fetching current standings...</div>
+  </div>
+</div>
+
+<script>
+  const SPREADSHEET_ID = '15tc_JmXaxKdVVgqwZvcjlnKsiU-DRf0SfHErxbuQsEg';
+  const REFRESH_INTERVAL_SECONDS = 1;
+  
+  let leaderboardData = { alltime: [], monthly: [] };
+  let lastDataHash = "";
+  let activeTab = 'alltime';
+  let isFetching = false;
+
+  document.getElementById('logoImg').onerror = function() {
+    this.src = 'Logo Final.jpg';
+  };
+
+  function fetchJSONP(sheetName, callbackName) {
+    return new Promise((resolve, reject) => {
+      const cacheBuster = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+
+      window[callbackName] = function(json) {
+        delete window[callbackName];
+        document.getElementById(scriptId)?.remove();
+
+        const results = [];
+        if (json && json.table && json.table.rows) {
+          json.table.rows.forEach(r => {
+            if (r.c && r.c[0] && r.c[1]) {
+              const rawName = r.c[0].v !== null && r.c[0].v !== undefined ? r.c[0].v.toString().trim() : '';
+              const rawScore = r.c[1].v;
+              const score = parseFloat(rawScore);
+
+              const nameLower = rawName.toLowerCase();
+              
+              const isHeaderRow = nameLower === 'player' || 
+                                 nameLower.includes('monthly') || 
+                                 nameLower.includes('score') || 
+                                 isNaN(score);
+
+              if (rawName && !isHeaderRow) {
+                results.push({ name: rawName, score: score });
+              }
+            }
+          });
+        }
+        resolve(results.sort((a, b) => b.score - a.score));
+      };
+
+      const scriptId = 'script_' + callbackName;
+      const oldScript = document.getElementById(scriptId);
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=responseHandler:${callbackName}&sheet=${encodeURIComponent(sheetName)}&_=${cacheBuster}`;
+      script.onerror = () => {
+        delete window[callbackName];
+        document.getElementById(scriptId)?.remove();
+        reject(new Error(`Failed to load ${sheetName}`));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  async function loadLeaderboard() {
+    if (isFetching) return;
+    isFetching = true;
+
+    try {
+      const [alltimeScores, monthlyScores] = await Promise.all([
+        fetchJSONP('All Time', 'cb_alltime'),
+        fetchJSONP('Monthly', 'cb_monthly')
+      ]);
+
+      const newDataHash = JSON.stringify({ alltime: alltimeScores, monthly: monthlyScores });
+
+      if (newDataHash !== lastDataHash) {
+        leaderboardData.alltime = alltimeScores;
+        leaderboardData.monthly = monthlyScores;
+        lastDataHash = newDataHash;
+        render();
+      }
+
+      document.getElementById('subheading').innerText = 'Live standings • Updating real-time';
+    } catch (err) {
+      console.error(err);
+      if (!lastDataHash) {
+        document.getElementById('dashboardContent').innerHTML = `
+          <div class="state-message" style="color: #ef4444;">
+            Unable to fetch data.<br><br>
+            Make sure your Google Sheet permission is set to <strong>"Anyone with the link can view"</strong> under the Share menu.
+          </div>`;
+      }
+    } finally {
+      isFetching = false;
+    }
+  }
+
+  function render() {
+    const data = leaderboardData[activeTab] || [];
+    const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+    const filtered = data.filter(item => item.name.toLowerCase().includes(searchVal));
+
+    const container = document.getElementById('dashboardContent');
+
+    if (filtered.length === 0) {
+      if (searchVal) {
+        container.innerHTML = `<div class="state-message">No participants found matching "${searchVal}".</div>`;
+      } else if (activeTab === 'monthly') {
+        container.innerHTML = `<div class="state-message">No quiz conducted yet for this month. Stay tuned!</div>`;
+      } else {
+        container.innerHTML = `<div class="state-message">No participants found for All Time.</div>`;
+      }
+      return;
+    }
+
+    const top3 = filtered.slice(0, 3);
+    const displayOrder = [
+      top3[1] ? { ...top3[1], cls: 'silver', badge: '🥈' } : null,
+      top3[0] ? { ...top3[0], cls: 'gold', badge: '🥇' } : null,
+      top3[2] ? { ...top3[2], cls: 'bronze', badge: '🥉' } : null
+    ];
+
+    let html = '<div class="podium-container">';
+    displayOrder.forEach(item => {
+      if (item) {
+        html += `
+          <div class="podium-card ${item.cls}">
+            <div class="badge">${item.badge}</div>
+            <div class="podium-name" title="${item.name}">${item.name}</div>
+            <div class="podium-score">${item.score.toLocaleString()}</div>
+            <div class="podium-label">PTS</div>
+          </div>`;
+      }
+    });
+    html += '</div>';
+
+    const remaining = filtered.slice(3);
+    html += `
+      <div class="list-container">
+        <div class="list-header">
+          <div style="width: 65px;">Rank</div>
+          <div style="flex: 1;">Participant</div>
+          <div style="text-align: right;">Points</div>
+        </div>`;
+
+    if (remaining.length > 0) {
+      remaining.forEach((item, index) => {
+        html += `
+          <div class="row">
+            <div class="col-rank">#${index + 4}</div>
+            <div class="col-name">${item.name}</div>
+            <div class="col-score">${item.score.toLocaleString()}</div>
+          </div>`;
+      });
+    } else {
+      html += `<div style="padding: 16px; text-align: center; color: var(--text-sub); font-size: 0.85rem;">Top 3 participants listed on podium</div>`;
+    }
+    html += '</div>';
+
+    container.innerHTML = html;
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-alltime').classList.toggle('active', tab === 'alltime');
+    document.getElementById('tab-monthly').classList.toggle('active', tab === 'monthly');
+    render();
+  }
+
+  // Initial load
+  loadLeaderboard();
+
+  // Automatic refresh loop every 1 second
+  setInterval(loadLeaderboard, REFRESH_INTERVAL_SECONDS * 1000);
+</script>
+</body>
+</html>
