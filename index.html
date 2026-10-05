@@ -6,8 +6,8 @@
   <title>SBOCYM Bible Study Quiz Leaderboard</title>
   
   <!-- Browser Tab Logo (Favicon) -->
-  <link rel="icon" type="image/jpeg" sizes="32x32" href="Logo JPEG.jpg">
-  <link rel="shortcut icon" type="image/jpeg" href="Logo JPEG.jpg">
+  <link rel="icon" type="image/jpeg" sizes="32x32" href="Logo JPEG.jpg?v=2">
+  <link rel="shortcut icon" type="image/jpeg" href="Logo JPEG.jpg?v=2">
 
   <style>
     :root {
@@ -25,7 +25,6 @@
       --accent: #6366f1;
     }
 
-    /* Native system font stack used by Apple, Google, and modern OSs */
     * { 
       box-sizing: border-box; 
       margin: 0; 
@@ -39,7 +38,7 @@
     .container { width: 100%; max-width: 750px; margin: 0 auto; }
 
     /* Header & Logo */
-    .header { text-align: center; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; }
+    .header { text-align: center; margin-bottom: 1.2rem; display: flex; flex-direction: column; align-items: center; }
     .title-wrapper { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 0.4rem; }
     
     .church-logo { 
@@ -65,9 +64,32 @@
     }
     .header p { color: var(--text-sub); font-size: 0.95rem; }
 
-    .tabs { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.8rem; background: #162032; padding: 6px; border-radius: 14px; width: fit-content; margin: 0 auto 1.8rem auto; border: 1px solid var(--card-border); }
-    .tab-btn { padding: 10px 24px; border: none; background: transparent; color: var(--text-sub); font-weight: 600; font-size: 0.9rem; border-radius: 10px; cursor: pointer; transition: all 0.25s ease; }
+    /* Next Quiz Banner */
+    .announcement-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(30, 41, 59, 0.9));
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 0.92rem;
+      color: #c7d2fe;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .announcement-banner strong { color: #fff; font-weight: 700; }
+
+    /* Navigation & Controls */
+    .nav-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    
+    .tabs { display: flex; gap: 0.5rem; background: #162032; padding: 6px; border-radius: 14px; border: 1px solid var(--card-border); }
+    .tab-btn { padding: 10px 20px; border: none; background: transparent; color: var(--text-sub); font-weight: 600; font-size: 0.9rem; border-radius: 10px; cursor: pointer; transition: all 0.25s ease; }
     .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
+
+    /* Month Selector Dropdown */
+    .month-selector-wrapper { display: none; align-items: center; gap: 8px; background: #162032; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--card-border); }
+    .month-selector-wrapper.visible { display: flex; }
+    .month-selector-wrapper label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; }
+    .month-dropdown { background: var(--card-bg); color: #fff; border: 1px solid var(--card-border); padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; outline: none; cursor: pointer; }
 
     .controls { margin-bottom: 2rem; }
     .search-input { width: 100%; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
@@ -104,10 +126,12 @@
 
     .state-message { text-align: center; padding: 3rem; color: var(--text-sub); font-weight: 500; font-size: 0.95rem; }
 
-    /* Mobile Tweaks */
     @media (max-width: 600px) {
       .church-logo { width: 46px; height: 46px; }
       .header h1 { font-size: 1.35rem; }
+      .nav-row { flex-direction: column; align-items: stretch; }
+      .tabs { justify-content: center; }
+      .month-selector-wrapper { justify-content: center; }
       .podium-container { gap: 6px; }
       .podium-card.gold { height: 210px; }
       .podium-card.silver { height: 185px; }
@@ -122,15 +146,28 @@
 <div class="container">
   <div class="header">
     <div class="title-wrapper">
-      <img src="Logo Final.png" alt="SBOCYM Logo" class="church-logo" id="logoImg">
+      <img src="Logo JPEG.jpg" alt="SBOCYM Logo" class="church-logo" id="logoImg">
       <h1>SBOCYM Bible Study Quiz Leaderboard</h1>
     </div>
     <p id="subheading">Connecting to Google Sheets...</p>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-alltime" onclick="switchTab('alltime')">All Time</button>
-    <button class="tab-btn" id="tab-monthly" onclick="switchTab('monthly')">This Month</button>
+  <!-- Announcement Banner for Next Quiz -->
+  <div id="announcementBanner" class="announcement-banner" style="display: none;">
+    📅 <strong>Next Quiz:</strong> <span id="nextQuizText">Loading...</span>
+  </div>
+
+  <div class="nav-row">
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-alltime" onclick="switchTab('alltime')">All Time</button>
+      <button class="tab-btn" id="tab-monthly" onclick="switchTab('monthly')">Quiz Archive</button>
+    </div>
+
+    <!-- Month Picker Dropdown -->
+    <div class="month-selector-wrapper" id="monthSelectorWrapper">
+      <label for="monthDropdown">Select Month:</label>
+      <select id="monthDropdown" class="month-dropdown" onchange="changeSelectedMonth()"></select>
+    </div>
   </div>
 
   <div class="controls">
@@ -146,14 +183,32 @@
   const SPREADSHEET_ID = '15tc_JmXaxKdVVgqwZvcjlnKsiU-DRf0SfHErxbuQsEg';
   const REFRESH_INTERVAL_SECONDS = 1;
   
-  let leaderboardData = { alltime: [], monthly: [] };
+  let alltimeData = [];
+  let rawScoresMaster = [];
+  let availableMonths = [];
+  let selectedMonth = "";
   let lastDataHash = "";
   let activeTab = 'alltime';
   let isFetching = false;
 
   document.getElementById('logoImg').onerror = function() {
-    this.src = 'Logo Final.jpg';
+    this.src = 'Logo Final.png';
   };
+
+  function parseGoogleSheetDate(rawVal, formattedVal) {
+    if (formattedVal && typeof formattedVal === 'string' && !formattedVal.startsWith('Date(')) {
+      const d = new Date(formattedVal);
+      if (!isNaN(d)) return d;
+    }
+    if (typeof rawVal === 'string' && rawVal.startsWith('Date(')) {
+      const parts = rawVal.match(/\d+/g);
+      if (parts && parts.length >= 3) {
+        return new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+      }
+    }
+    const fallback = new Date(rawVal);
+    return isNaN(fallback) ? null : fallback;
+  }
 
   function fetchJSONP(sheetName, callbackName) {
     return new Promise((resolve, reject) => {
@@ -170,7 +225,6 @@
               const rawName = r.c[0].v !== null && r.c[0].v !== undefined ? r.c[0].v.toString().trim() : '';
               const rawScore = r.c[1].v;
               const score = parseFloat(rawScore);
-
               const nameLower = rawName.toLowerCase();
               
               const isHeaderRow = nameLower === 'player' || 
@@ -203,33 +257,105 @@
     });
   }
 
+  function fetchRawScoresAndNextQuiz() {
+    return new Promise((resolve) => {
+      const cbName = 'cb_raw_' + Math.random().toString(36).substring(2, 7);
+      window[cbName] = function(json) {
+        delete window[cbName];
+        document.getElementById('script_raw_config')?.remove();
+
+        let rawRows = [];
+        let nextQuizVal = "";
+
+        if (json && json.table && json.table.rows) {
+          // Check cell F1 (Row 0, Column index 5) for Next Quiz Announcement
+          if (json.table.rows[0] && json.table.rows[0].c && json.table.rows[0].c[5]) {
+            const cellVal = json.table.rows[0].c[5].f || json.table.rows[0].c[5].v;
+            if (cellVal) nextQuizVal = cellVal.toString().trim();
+          }
+
+          json.table.rows.forEach(r => {
+            if (r.c && r.c[0]) {
+              const rawDateVal = r.c[0].v;
+              const formattedDateVal = r.c[0].f;
+              const nameVal = r.c[1] ? r.c[1].v : '';
+              const scoreVal = r.c[2] ? r.c[2].v : '';
+
+              const parsedDate = parseGoogleSheetDate(rawDateVal, formattedDateVal);
+              if (parsedDate && nameVal) {
+                rawRows.push({ 
+                  dateObj: parsedDate, 
+                  monthStr: parsedDate.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+                  name: nameVal, 
+                  score: parseFloat(scoreVal) || 0 
+                });
+              }
+            }
+          });
+        }
+        resolve({ rawRows, nextQuizVal });
+      };
+
+      const script = document.createElement('script');
+      script.id = 'script_raw_config';
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=responseHandler:${cbName}&sheet=${encodeURIComponent('Scores')}&_=` + Date.now();
+      document.body.appendChild(script);
+    });
+  }
+
   async function loadLeaderboard() {
     if (isFetching) return;
     isFetching = true;
 
     try {
-      const [alltimeScores, monthlyScores] = await Promise.all([
+      const [alltimeScores, rawData] = await Promise.all([
         fetchJSONP('All Time', 'cb_alltime'),
-        fetchJSONP('Monthly', 'cb_monthly')
+        fetchRawScoresAndNextQuiz()
       ]);
 
-      const newDataHash = JSON.stringify({ alltime: alltimeScores, monthly: monthlyScores });
+      rawScoresMaster = rawData.rawRows;
+
+      // Handle Next Quiz Announcement Banner
+      const bannerEl = document.getElementById('announcementBanner');
+      const textEl = document.getElementById('nextQuizText');
+      if (rawData.nextQuizVal) {
+        textEl.innerText = rawData.nextQuizVal;
+        bannerEl.style.display = 'block';
+      } else {
+        bannerEl.style.display = 'none';
+      }
+
+      // Map unique months ordered by most recent date
+      const monthMap = new Map();
+      rawScoresMaster.forEach(row => {
+        if (!monthMap.has(row.monthStr) || monthMap.get(row.monthStr) < row.dateObj) {
+          monthMap.set(row.monthStr, row.dateObj);
+        }
+      });
+
+      const newMonths = Array.from(monthMap.keys()).sort((a, b) => monthMap.get(b) - monthMap.get(a));
+      
+      if (newMonths.length > 0 && (!selectedMonth || !newMonths.includes(selectedMonth))) {
+        selectedMonth = newMonths[0]; // Auto-select the most recent quiz month
+      }
+
+      const newDataHash = JSON.stringify({ alltimeScores, rawScoresMaster, selectedMonth, nq: rawData.nextQuizVal });
 
       if (newDataHash !== lastDataHash) {
-        leaderboardData.alltime = alltimeScores;
-        leaderboardData.monthly = monthlyScores;
+        alltimeData = alltimeScores;
+        availableMonths = newMonths;
         lastDataHash = newDataHash;
+        updateMonthDropdown();
         render();
       }
 
-      document.getElementById('subheading').innerText = 'Live standings • Updating real-time';
+      document.getElementById('subheading').innerText = 'Live standings • Real-time sync active';
     } catch (err) {
       console.error(err);
       if (!lastDataHash) {
         document.getElementById('dashboardContent').innerHTML = `
           <div class="state-message" style="color: #ef4444;">
-            Unable to fetch data.<br><br>
-            Make sure your Google Sheet permission is set to <strong>"Anyone with the link can view"</strong> under the Share menu.
+            Unable to fetch data.<br><br>Make sure your Google Sheet is shared with <strong>"Anyone with the link can view"</strong>.
           </div>`;
       }
     } finally {
@@ -237,18 +363,62 @@
     }
   }
 
-  function render() {
-    const data = leaderboardData[activeTab] || [];
-    const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
-    const filtered = data.filter(item => item.name.toLowerCase().includes(searchVal));
+  function updateMonthDropdown() {
+    const dropdown = document.getElementById('monthDropdown');
+    const currentVal = selectedMonth;
+    
+    dropdown.innerHTML = '';
+    availableMonths.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      if (m === currentVal) opt.selected = true;
+      dropdown.appendChild(opt);
+    });
 
+    if (dropdown.value) selectedMonth = dropdown.value;
+  }
+
+  function changeSelectedMonth() {
+    selectedMonth = document.getElementById('monthDropdown').value;
+    render();
+  }
+
+  function getMonthlyDataForSelectedMonth() {
+    const scoresMap = {};
+
+    rawScoresMaster.forEach(row => {
+      if (row.monthStr === selectedMonth && row.name) {
+        const playerName = row.name.toString().trim();
+        scoresMap[playerName] = (scoresMap[playerName] || 0) + row.score;
+      }
+    });
+
+    const results = [];
+    for (const [name, score] of Object.entries(scoresMap)) {
+      results.push({ name, score });
+    }
+    return results.sort((a, b) => b.score - a.score);
+  }
+
+  function render() {
     const container = document.getElementById('dashboardContent');
+    const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    let data = [];
+    if (activeTab === 'alltime') {
+      data = alltimeData;
+    } else {
+      data = getMonthlyDataForSelectedMonth();
+    }
+
+    const filtered = data.filter(item => item.name.toLowerCase().includes(searchVal));
 
     if (filtered.length === 0) {
       if (searchVal) {
         container.innerHTML = `<div class="state-message">No participants found matching "${searchVal}".</div>`;
       } else if (activeTab === 'monthly') {
-        container.innerHTML = `<div class="state-message">No quiz conducted yet for this month. Stay tuned!</div>`;
+        container.innerHTML = `<div class="state-message">No quiz records found for ${selectedMonth || 'this month'}. Select another month above!</div>`;
       } else {
         container.innerHTML = `<div class="state-message">No participants found for All Time.</div>`;
       }
@@ -306,13 +476,15 @@
     activeTab = tab;
     document.getElementById('tab-alltime').classList.toggle('active', tab === 'alltime');
     document.getElementById('tab-monthly').classList.toggle('active', tab === 'monthly');
+    
+    const selectorWrapper = document.getElementById('monthSelectorWrapper');
+    selectorWrapper.classList.toggle('visible', tab === 'monthly');
+
     render();
   }
 
   // Initial load
   loadLeaderboard();
-
-  // Automatic refresh loop every 1 second
   setInterval(loadLeaderboard, REFRESH_INTERVAL_SECONDS * 1000);
 </script>
 </body>
