@@ -267,31 +267,63 @@
         let rawRows = [];
         let nextQuizVal = "";
 
-        if (json && json.table && json.table.rows) {
-          // Check cell F1 (Row 0, Column index 5) for Next Quiz Announcement
-          if (json.table.rows[0] && json.table.rows[0].c && json.table.rows[0].c[5]) {
-            const cellVal = json.table.rows[0].c[5].f || json.table.rows[0].c[5].v;
-            if (cellVal) nextQuizVal = cellVal.toString().trim();
+        if (json && json.table) {
+          // 1. Check table.cols headers (Row 1 of Google Sheet often maps to cols)
+          if (json.table.cols) {
+            json.table.cols.forEach(col => {
+              if (col && (col.label || col.id)) {
+                const txt = (col.label || col.id).toString().trim();
+                if (txt && /\d/.test(txt) && !txt.toLowerCase().includes('next quiz')) {
+                  nextQuizVal = txt;
+                }
+              }
+            });
           }
 
-          json.table.rows.forEach(r => {
-            if (r.c && r.c[0]) {
-              const rawDateVal = r.c[0].v;
-              const formattedDateVal = r.c[0].f;
-              const nameVal = r.c[1] ? r.c[1].v : '';
-              const scoreVal = r.c[2] ? r.c[2].v : '';
-
-              const parsedDate = parseGoogleSheetDate(rawDateVal, formattedDateVal);
-              if (parsedDate && nameVal) {
-                rawRows.push({ 
-                  dateObj: parsedDate, 
-                  monthStr: parsedDate.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-                  name: nameVal, 
-                  score: parseFloat(scoreVal) || 0 
-                });
+          // 2. Check table.rows (if Row 1 wasn't treated as a column header)
+          if (!nextQuizVal && json.table.rows) {
+            for (let i = 0; i < Math.min(json.table.rows.length, 10); i++) {
+              const r = json.table.rows[i];
+              if (r && r.c) {
+                for (let j = 0; j < r.c.length; j++) {
+                  const cell = r.c[j];
+                  if (cell) {
+                    const val = cell.f || cell.v;
+                    if (val !== null && val !== undefined) {
+                      const strVal = val.toString().trim();
+                      if (strVal && /\d/.test(strVal) && !strVal.toLowerCase().includes('next quiz')) {
+                        nextQuizVal = strVal;
+                        break;
+                      }
+                    }
+                  }
+                }
               }
+              if (nextQuizVal) break;
             }
-          });
+          }
+
+          // Parse participant scores from columns A, B, C
+          if (json.table.rows) {
+            json.table.rows.forEach(r => {
+              if (r.c && r.c[0]) {
+                const rawDateVal = r.c[0].v;
+                const formattedDateVal = r.c[0].f;
+                const nameVal = r.c[1] ? r.c[1].v : '';
+                const scoreVal = r.c[2] ? r.c[2].v : '';
+
+                const parsedDate = parseGoogleSheetDate(rawDateVal, formattedDateVal);
+                if (parsedDate && nameVal) {
+                  rawRows.push({ 
+                    dateObj: parsedDate, 
+                    monthStr: parsedDate.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+                    name: nameVal, 
+                    score: parseFloat(scoreVal) || 0 
+                  });
+                }
+              }
+            });
+          }
         }
         resolve({ rawRows, nextQuizVal });
       };
